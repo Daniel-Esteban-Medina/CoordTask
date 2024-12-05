@@ -1,5 +1,6 @@
 package coordtask;
 
+import componente.Conexion;
 import java.awt.Color;
 
 import java.awt.Component;
@@ -9,6 +10,11 @@ import java.net.URI;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListCellRenderer;
@@ -18,29 +24,69 @@ import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 public class DetallePersona extends javax.swing.JFrame {
-    //private DefaultListModel<String> modelGrupos;
-    //private DefaultListModel<String> modelTareas;
-    public DetallePersona() {
-        initComponents();               
+    private Conexion conect = new Conexion();
+    private Connection con = conect.getConexion();
+    private Statement st;
+    private ResultSet rs;
+    private String codigo = "";
+    private DefaultListModel<String> modeloLista = new DefaultListModel<String>();
+    public DetallePersona(String nombre, String apellidos, String telefono, String correo) {
+        initComponents();  
+        this.setTitle("DETALLES PESRONA");
+        this.jTextFieldNombre.setText(nombre);
+        this.jTextFieldApellidos.setText(apellidos);
+        this.jTextFieldTelefono.setText(telefono);
+        this.jTextFieldCorreo.setText(correo);
+        try {
+            rellenarLista();
+        } catch (SQLException ex) {
+            Logger.getLogger(DetallePersona.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    private DetallePersona() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+    private void rellenarLista() throws SQLException{
+        obtenerCodigo(this.jTextFieldNombre.getText(), this.jTextFieldApellidos.getText(),this.jTextFieldTelefono.getText(),this.jTextFieldCorreo.getText());
+        String equiposQuery = "SELECT E.Nombre FROM Equipos E JOIN PERSONAS_EQUIPOS PE ON E.Codigo = PE.Cod_equipo WHERE PE.Cod_persona = ?";
+                PreparedStatement psEquipos = con.prepareStatement(equiposQuery);
+                psEquipos.setString(1, codigo);
+                rs = psEquipos.executeQuery();
+                while (rs.next()) {
+                    modeloLista.addElement((String) rs.getObject("E.Nombre"));                  
+                }
+                listaEquiposPersonas.setModel(modeloLista);
+    }
+    private void obtenerCodigo(String nombre, String apellidos,String telefono,String correo) throws SQLException{
+        String tareaQuery = "SELECT Codigo FROM Personas WHERE Nombre = ? AND Apellidos = ? AND Telefono = ? AND Correo_electronico = ?";
+            PreparedStatement ps = con.prepareStatement(tareaQuery);
+            ps.setString(1, nombre);
+            ps.setString(2, apellidos);
+            ps.setString(3, telefono);
+            ps.setString(4, correo);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                codigo = rs.getString("Codigo");
+            }
     }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         jLabel12 = new javax.swing.JLabel();
-        jTextFieldTitulo = new javax.swing.JTextField();
+        jTextFieldApellidos = new javax.swing.JTextField();
         jScrollPane3 = new javax.swing.JScrollPane();
-        listaGruposTarea = new javax.swing.JList<>();
+        listaEquiposPersonas = new javax.swing.JList<>();
         jLabel3 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         jLabel16 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
-        jTextFieldTitulo1 = new javax.swing.JTextField();
-        jTextFieldTitulo2 = new javax.swing.JTextField();
+        jTextFieldCorreo = new javax.swing.JTextField();
+        jTextFieldNombre = new javax.swing.JTextField();
         jLabel6 = new javax.swing.JLabel();
-        jTextFieldTitulo3 = new javax.swing.JTextField();
+        jTextFieldTelefono = new javax.swing.JTextField();
         jButton3 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -48,14 +94,16 @@ public class DetallePersona extends javax.swing.JFrame {
 
         jLabel12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/pngegg(3).png"))); // NOI18N
         getContentPane().add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 0, 90, 80));
-        getContentPane().add(jTextFieldTitulo, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 120, 210, -1));
 
-        listaGruposTarea.setModel(new javax.swing.AbstractListModel<String>() {
+        jTextFieldApellidos.setEditable(false);
+        getContentPane().add(jTextFieldApellidos, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 120, 210, -1));
+
+        listaEquiposPersonas.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });
-        jScrollPane3.setViewportView(listaGruposTarea);
+        jScrollPane3.setViewportView(listaEquiposPersonas);
 
         getContentPane().add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 110, 180, 100));
 
@@ -90,33 +138,46 @@ public class DetallePersona extends javax.swing.JFrame {
         jLabel5.setFont(new java.awt.Font("Malgun Gothic", 1, 18)); // NOI18N
         jLabel5.setText("Nombre:");
         getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 90, 90, -1));
-        getContentPane().add(jTextFieldTitulo1, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 190, 210, -1));
-        getContentPane().add(jTextFieldTitulo2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, 160, -1));
+
+        jTextFieldCorreo.setEditable(false);
+        getContentPane().add(jTextFieldCorreo, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 190, 210, -1));
+
+        jTextFieldNombre.setEditable(false);
+        getContentPane().add(jTextFieldNombre, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, 160, -1));
 
         jLabel6.setFont(new java.awt.Font("Malgun Gothic", 1, 18)); // NOI18N
         jLabel6.setText("Teléfono:");
         getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 160, 120, -1));
-        getContentPane().add(jTextFieldTitulo3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 190, 160, -1));
+
+        jTextFieldTelefono.setEditable(false);
+        getContentPane().add(jTextFieldTelefono, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 190, 160, -1));
 
         jButton3.setBackground(new java.awt.Color(51, 51, 255));
         jButton3.setFont(new java.awt.Font("Arial", 1, 36)); // NOI18N
         jButton3.setForeground(new java.awt.Color(255, 255, 255));
         jButton3.setText("MODIFICAR");
         jButton3.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
         getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 230, -1, 50));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        try {
-            Tareas t = new Tareas();
-            t.setVisible(true);
-            this.dispose();
-        } catch (IOException ex) {
-            Logger.getLogger(DetallePersona.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        Personas p = new Personas();
+        p.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        AyadirPersonas ap = new AyadirPersonas(this.jTextFieldNombre.getText(),this.jTextFieldApellidos.getText(),this.jTextFieldTelefono.getText(),this.jTextFieldCorreo.getText());
+        ap.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_jButton3ActionPerformed
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -135,10 +196,10 @@ public class DetallePersona extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JTextField jTextFieldTitulo;
-    private javax.swing.JTextField jTextFieldTitulo1;
-    private javax.swing.JTextField jTextFieldTitulo2;
-    private javax.swing.JTextField jTextFieldTitulo3;
-    private javax.swing.JList<String> listaGruposTarea;
+    private javax.swing.JTextField jTextFieldApellidos;
+    private javax.swing.JTextField jTextFieldCorreo;
+    private javax.swing.JTextField jTextFieldNombre;
+    private javax.swing.JTextField jTextFieldTelefono;
+    private javax.swing.JList<String> listaEquiposPersonas;
     // End of variables declaration//GEN-END:variables
 }

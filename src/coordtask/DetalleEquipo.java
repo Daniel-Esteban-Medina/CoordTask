@@ -1,5 +1,6 @@
 package coordtask;
 
+import componente.Conexion;
 import java.awt.Color;
 
 import java.awt.Component;
@@ -9,6 +10,11 @@ import java.net.URI;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListCellRenderer;
@@ -18,10 +24,48 @@ import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 public class DetalleEquipo extends javax.swing.JFrame {
-    //private DefaultListModel<String> modelGrupos;
-    //private DefaultListModel<String> modelTareas;
-    public DetalleEquipo() {
-        initComponents();               
+    private Conexion conect = new Conexion();
+    private Connection con = conect.getConexion();
+    private Statement st;
+    private ResultSet rs;
+    private String codigo = "";
+    private DefaultListModel<String> modeloLista = new DefaultListModel<String>();
+    public DetalleEquipo(String nombre, String descripcion) {
+        initComponents();      
+        this.setTitle("MODIFICAR EQUIPO");
+        this.setResizable(false);
+        this.jTextFieldTitulo.setText(nombre);
+        this.jTextAreaDescripcion.setText(descripcion);
+        try{
+            this.rellenarLista();
+        }catch(SQLException e){
+            System.out.println(e);
+        }
+    }
+
+    private DetalleEquipo() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+    private void rellenarLista() throws SQLException{
+        obtenerCodigo(this.jTextFieldTitulo.getText(), this.jTextAreaDescripcion.getText());
+        String equiposQuery = "SELECT P.Nombre, P.Apellidos FROM PERSONAS P JOIN PERSONAS_EQUIPOS PE ON P.Codigo = PE.Cod_persona WHERE PE.Cod_equipo = ?";
+                PreparedStatement psEquipos = con.prepareStatement(equiposQuery);
+                psEquipos.setString(1, codigo);
+                rs = psEquipos.executeQuery();
+                while (rs.next()) {
+                    modeloLista.addElement((String) rs.getObject("Nombre")+" "+rs.getObject("Apellidos"));                  
+                }
+                listaEquiposPersonas.setModel(modeloLista);
+    }
+    private void obtenerCodigo(String nombre, String descripcion) throws SQLException{
+        String tareaQuery = "SELECT Codigo FROM EQUIPOS WHERE Nombre = ? AND Descripcion = ?";
+            PreparedStatement ps = con.prepareStatement(tareaQuery);
+            ps.setString(1, nombre);
+            ps.setString(2, descripcion);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                codigo = rs.getString("Codigo");
+            }
     }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -32,7 +76,7 @@ public class DetalleEquipo extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextAreaDescripcion = new javax.swing.JTextArea();
         jScrollPane3 = new javax.swing.JScrollPane();
-        listaGruposTarea = new javax.swing.JList<>();
+        listaEquiposPersonas = new javax.swing.JList<>();
         jLabel3 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
@@ -45,20 +89,23 @@ public class DetalleEquipo extends javax.swing.JFrame {
 
         jLabel12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/pngegg(1)(2).png"))); // NOI18N
         getContentPane().add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 10, 90, 80));
+
+        jTextFieldTitulo.setEditable(false);
         getContentPane().add(jTextFieldTitulo, new org.netbeans.lib.awtextra.AbsoluteConstraints(6, 125, 261, -1));
 
+        jTextAreaDescripcion.setEditable(false);
         jTextAreaDescripcion.setColumns(20);
         jTextAreaDescripcion.setRows(5);
         jScrollPane1.setViewportView(jTextAreaDescripcion);
 
         getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 190, 505, 97));
 
-        listaGruposTarea.setModel(new javax.swing.AbstractListModel<String>() {
+        listaEquiposPersonas.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });
-        jScrollPane3.setViewportView(listaGruposTarea);
+        jScrollPane3.setViewportView(listaEquiposPersonas);
 
         getContentPane().add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 120, 190, 170));
 
@@ -95,20 +142,31 @@ public class DetalleEquipo extends javax.swing.JFrame {
         jButton3.setForeground(new java.awt.Color(255, 255, 255));
         jButton3.setText("MODIFICAR");
         jButton3.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
         getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 300, -1, 50));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        try {
-            Tareas t = new Tareas();
-            t.setVisible(true);
-            this.dispose();
-        } catch (IOException ex) {
-            Logger.getLogger(DetalleEquipo.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        Equipos e = new Equipos();
+        e.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        try {
+            AyadirEquipo ae = new AyadirEquipo(jTextFieldTitulo.getText(),jTextAreaDescripcion.getText());
+            ae.setVisible(true);
+            this.dispose();
+        } catch (SQLException ex) {
+            Logger.getLogger(DetalleEquipo.class.getName()).log(Level.SEVERE, null, ex);
+        }        
+    }//GEN-LAST:event_jButton3ActionPerformed
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -128,6 +186,6 @@ public class DetalleEquipo extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTextArea jTextAreaDescripcion;
     private javax.swing.JTextField jTextFieldTitulo;
-    private javax.swing.JList<String> listaGruposTarea;
+    private javax.swing.JList<String> listaEquiposPersonas;
     // End of variables declaration//GEN-END:variables
 }

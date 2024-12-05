@@ -1,12 +1,16 @@
 package coordtask;
 
 import componente.Conexion;
+import static coordtask.Tareas.convertirHtmlAFecha;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -31,11 +35,13 @@ public class Equipos extends javax.swing.JFrame {
     private Connection con = conect.getConexion();
     private Statement st;
     private ResultSet rs;
+    private String codigoTemp = "";
     public Equipos() {
         initComponents();
         // Deshabilitar el redimensionamiento de columnas
         jTable1.getTableHeader().setReorderingAllowed(false);
-
+        this.setTitle("EQUIPOS");
+        this.setResizable(false);
         // Ajustar la altura de las filas
         jTable1.setRowHeight(60);
 
@@ -58,7 +64,13 @@ public class Equipos extends javax.swing.JFrame {
         modeloTabla = new DefaultTableModel(
             null, // Datos (vacío inicialmente)
             new String[]{"NOMBRE", "DESCRIPCIÓN"} // Nombres de columnas
-        );
+        ){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Desactiva la edición para todas las celdas
+                return false;
+            }
+        };                
         jTable1.setModel(modeloTabla);
         this.ejecutarConsulta("SELECT Nombre, Descripcion FROM Equipos");
         // Renderer para la descripción
@@ -91,6 +103,24 @@ public class Equipos extends javax.swing.JFrame {
         // Configurar tamaño de columnas
         TableColumn descriptionColumn = jTable1.getColumnModel().getColumn(1);
         descriptionColumn.setPreferredWidth(300);
+        jTable1.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Detectar doble clic
+                if (e.getClickCount() == 2) {
+                    // Obtener la fila seleccionada
+                    int filaSeleccionada = jTable1.getSelectedRow();
+                    if (filaSeleccionada != -1) { // Asegurarse de que hay una fila seleccionada
+                        // Obtener valores de la fila seleccionada
+                        String nombre = jTable1.getValueAt(filaSeleccionada, 0).toString();
+                        String descripcion = jTable1.getValueAt(filaSeleccionada, 1).toString();                     
+                        DetalleEquipo de = new DetalleEquipo(nombre, descripcion);
+                        de.setVisible(true);
+                        cerrarVentana();
+                    }
+                }
+            }
+        });
     }
     // MÉTODOS MANEJO BBDD
     public void ejecutarConsulta(String sql) {
@@ -111,15 +141,33 @@ public class Equipos extends javax.swing.JFrame {
             System.out.println(e.toString());
         }                                     
     }
+    public void limpiarTabla() {
+        while (modeloTabla.getRowCount() > 0) {
+            modeloTabla.removeRow(0);
+        }
+    }
+    private void obtenerCodigo(String nombre, String descripcion) throws SQLException{
+        String tareaQuery = "SELECT Codigo FROM Equipos WHERE Nombre = ? AND Descripcion = ?";
+            PreparedStatement ps = con.prepareStatement(tareaQuery);
+            ps.setString(1, nombre);
+            ps.setString(2, descripcion);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                codigoTemp = rs.getString("Codigo");
+            }
+    }
+    public void cerrarVentana(){
+        this.dispose();
+    }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jButton2 = new javax.swing.JButton();
+        jButtonEliminar = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
         jLabel4 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        jButtonCrear = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -130,8 +178,13 @@ public class Equipos extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/Delete.png"))); // NOI18N
-        jButton2.setText("Eliminar tarea");
+        jButtonEliminar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/Delete.png"))); // NOI18N
+        jButtonEliminar.setText("Eliminar tarea");
+        jButtonEliminar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonEliminarActionPerformed(evt);
+            }
+        });
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
@@ -145,8 +198,13 @@ public class Equipos extends javax.swing.JFrame {
         jLabel4.setText("LISTA EQUIPOS");
         jLabel4.setOpaque(true);
 
-        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/Add.png"))); // NOI18N
-        jButton1.setText("Nueva tarea");
+        jButtonCrear.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/Add.png"))); // NOI18N
+        jButtonCrear.setText("Nueva tarea");
+        jButtonCrear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonCrearActionPerformed(evt);
+            }
+        });
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -207,8 +265,8 @@ public class Equipos extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jButton2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButton1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jButtonEliminar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonCrear, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(14, Short.MAX_VALUE))
         );
@@ -223,9 +281,9 @@ public class Equipos extends javax.swing.JFrame {
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(32, 32, 32)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jButtonCrear, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(26, 26, 26)
-                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jButtonEliminar, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(18, Short.MAX_VALUE))
@@ -251,7 +309,7 @@ public class Equipos extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenu2MouseClicked
 
     private void jMenu3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu3MouseClicked
-        RecordatoriosAlarmas ra = new RecordatoriosAlarmas();
+        VentanaCrearNoti ra = new VentanaCrearNoti();
         ra.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_jMenu3MouseClicked
@@ -261,6 +319,34 @@ public class Equipos extends javax.swing.JFrame {
         cv.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_jMenu4MouseClicked
+
+    private void jButtonCrearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCrearActionPerformed
+        try {
+            AyadirEquipo ae = new AyadirEquipo();
+            ae.setVisible(true);
+            this.dispose();
+        } catch (SQLException ex) {
+            Logger.getLogger(Equipos.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonCrearActionPerformed
+
+    private void jButtonEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonEliminarActionPerformed
+        int filaSeleccionada = jTable1.getSelectedRow();
+            if (filaSeleccionada != -1) { try {
+                String nombre = jTable1.getValueAt(filaSeleccionada, 0).toString();
+                String descripcion = jTable1.getValueAt(filaSeleccionada, 1).toString();
+                obtenerCodigo(nombre,descripcion);
+                String sql = "DELETE FROM Equipos WHERE Codigo = ?";
+                PreparedStatement ps = con.prepareStatement(sql);
+                ps.setString(1, codigoTemp);
+                ps.executeUpdate();
+                limpiarTabla();
+                this.ejecutarConsulta("SELECT Nombre, Descripcion FROM Equipos");
+            } catch (SQLException ex) {
+                Logger.getLogger(Tareas.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                    }
+    }//GEN-LAST:event_jButtonEliminarActionPerformed
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -270,8 +356,8 @@ public class Equipos extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButtonCrear;
+    private javax.swing.JButton jButtonEliminar;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;

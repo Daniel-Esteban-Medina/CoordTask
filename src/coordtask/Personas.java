@@ -5,8 +5,11 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -30,8 +33,11 @@ public class Personas extends javax.swing.JFrame {
     private Connection con = conect.getConexion();
     private Statement st;
     private ResultSet rs;
+    
+    private String codigoTemp = "";
     public Personas() {
         initComponents();
+        this.setResizable(false);
         // Deshabilitar el redimensionamiento de columnas
         jTable1.getTableHeader().setReorderingAllowed(false);
 
@@ -57,12 +63,38 @@ public class Personas extends javax.swing.JFrame {
         modeloTabla = new DefaultTableModel(
             null, // Datos (vacío inicialmente)
             new String[]{"NOMBRE", "APELLIDOS","TELÉFONO","CORREO"} // Nombres de columnas
-        );
+        ){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Desactiva la edición para todas las celdas
+                return false;
+            }
+        }; 
         jTable1.setModel(modeloTabla);
         this.ejecutarConsulta("SELECT Nombre, Apellidos, Telefono, Correo_electronico FROM Personas");
         // Configurar tamaño de columnas
         TableColumn descriptionColumn = jTable1.getColumnModel().getColumn(3);
         descriptionColumn.setPreferredWidth(150);
+        jTable1.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Detectar doble clic
+                if (e.getClickCount() == 2) {
+                    // Obtener la fila seleccionada
+                    int filaSeleccionada = jTable1.getSelectedRow();
+                    if (filaSeleccionada != -1) { 
+                        // Obtener valores de la fila seleccionada
+                        String nombre = jTable1.getValueAt(filaSeleccionada, 0).toString();
+                        String apellidos = jTable1.getValueAt(filaSeleccionada, 1).toString();                     
+                        String telefono = jTable1.getValueAt(filaSeleccionada, 2).toString();
+                        String correo = jTable1.getValueAt(filaSeleccionada, 3).toString();
+                        DetallePersona dp = new DetallePersona(nombre,apellidos,telefono,correo);
+                        dp.setVisible(true);
+                        cerrarVentana();
+                    }
+                }
+            }
+        });
     }
     // MÉTODOS MANEJO BBDD
     public void ejecutarConsulta(String sql) {
@@ -82,6 +114,26 @@ public class Personas extends javax.swing.JFrame {
         }catch(SQLException e){
             System.out.println(e.toString());
         }                                     
+    }
+    public void cerrarVentana(){
+        this.dispose();
+    }
+    public void limpiarTabla() {
+        while (modeloTabla.getRowCount() > 0) {
+            modeloTabla.removeRow(0);
+        }
+    }
+    private void obtenerCodigo(String nombre, String apellidos, String telefono, String correo) throws SQLException{
+        String tareaQuery = "SELECT Codigo FROM Personas WHERE Nombre = ? AND Apellidos = ? AND TELEFONO = ? AND Correo_electronico = ?";
+            PreparedStatement ps = con.prepareStatement(tareaQuery);
+            ps.setString(1, nombre);
+            ps.setString(2, apellidos);
+            ps.setString(3, telefono);
+            ps.setString(4, correo);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                codigoTemp = rs.getString("Codigo");
+            }
     }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -104,6 +156,11 @@ public class Personas extends javax.swing.JFrame {
 
         jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/Delete.png"))); // NOI18N
         jButton2.setText("Eliminar tarea");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
@@ -119,6 +176,11 @@ public class Personas extends javax.swing.JFrame {
 
         jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/Add.png"))); // NOI18N
         jButton1.setText("Nueva tarea");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -212,7 +274,7 @@ public class Personas extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenu1MouseClicked
 
     private void jMenu3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu3MouseClicked
-        RecordatoriosAlarmas ra = new RecordatoriosAlarmas();
+        VentanaCrearNoti ra = new VentanaCrearNoti();
         ra.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_jMenu3MouseClicked
@@ -222,6 +284,32 @@ public class Personas extends javax.swing.JFrame {
         cv.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_jMenu4MouseClicked
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        AyadirPersonas ap = new AyadirPersonas();
+        ap.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        int filaSeleccionada = jTable1.getSelectedRow();
+            if (filaSeleccionada != -1) { try {
+                String nombre = jTable1.getValueAt(filaSeleccionada, 0).toString();
+                String apellidos = jTable1.getValueAt(filaSeleccionada, 1).toString();
+                String telefono = jTable1.getValueAt(filaSeleccionada, 2).toString();
+                String correo = jTable1.getValueAt(filaSeleccionada, 3).toString();
+                obtenerCodigo(nombre,apellidos, telefono,correo);
+                String sql = "DELETE FROM Personas WHERE Codigo = ?";
+                PreparedStatement ps = con.prepareStatement(sql);
+                ps.setString(1, codigoTemp);
+                ps.executeUpdate();
+                limpiarTabla();
+                this.ejecutarConsulta("SELECT Nombre, Apellidos, Telefono, Correo_electronico FROM Personas");
+            } catch (SQLException ex) {
+                Logger.getLogger(Tareas.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                    }
+    }//GEN-LAST:event_jButton2ActionPerformed
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
