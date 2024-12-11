@@ -109,8 +109,6 @@ public class VentanaCrearNoti extends javax.swing.JFrame {
         fecha1 = new componente.Fecha();
         jButtonCrear = new javax.swing.JButton();
         jButtonGetHora = new javax.swing.JButton();
-        jButtonBorrar = new javax.swing.JButton();
-        jButtonRevisar = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -160,22 +158,6 @@ public class VentanaCrearNoti extends javax.swing.JFrame {
             }
         });
         getContentPane().add(jButtonGetHora, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 310, -1, -1));
-
-        jButtonBorrar.setText("Borrar");
-        jButtonBorrar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonBorrarActionPerformed(evt);
-            }
-        });
-        getContentPane().add(jButtonBorrar, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 310, -1, -1));
-
-        jButtonRevisar.setText("Revisar");
-        jButtonRevisar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonRevisarActionPerformed(evt);
-            }
-        });
-        getContentPane().add(jButtonRevisar, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 310, -1, -1));
 
         jMenu1.setText("Equipos");
         jMenu1.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -239,14 +221,6 @@ public class VentanaCrearNoti extends javax.swing.JFrame {
         imprimirNotificaciones();
     }//GEN-LAST:event_jButtonGetHoraActionPerformed
 
-    private void jButtonBorrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBorrarActionPerformed
-        borrarNotificacionesPasadas();
-    }//GEN-LAST:event_jButtonBorrarActionPerformed
-
-    private void jButtonRevisarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRevisarActionPerformed
-        revisarNotificaciones();
-    }//GEN-LAST:event_jButtonRevisarActionPerformed
-
     private void jMenu1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu1MouseClicked
         Equipos e = new Equipos();
         e.setVisible(true);
@@ -300,7 +274,7 @@ public class VentanaCrearNoti extends javax.swing.JFrame {
         writer.write("--------------------------------------------------");
         writer.newLine();
         writer.flush(); 
-        System.out.println("Notificación guardada en: " + new File(getClass().getClassLoader().getResource("notificaciones.txt").getFile()));
+        System.out.println("Notificación guardada en: " + new File("notificaciones.txt"));
     } catch (IOException e) {
         System.err.println("Error al guardar la notificación: " + e.getMessage());
         e.printStackTrace();
@@ -339,7 +313,7 @@ public void revisarNotificaciones() {
     borrarNotificacionesPasadas();
 }
 public void borrarNotificacionesPasadas() {
-    File archivo = new File(getClass().getClassLoader().getResource("notificaciones.txt").getFile());
+    File archivo = new File("notificaciones.txt");
     if (!archivo.exists() || archivo.length() == 0) {
         System.out.println("No hay notificaciones para borrar.");
         return;
@@ -389,7 +363,7 @@ public void borrarNotificacionesPasadas() {
     }
 }
 public void imprimirNotificaciones() {
-    File archivo = new File(getClass().getClassLoader().getResource("notificaciones.txt").getFile());
+    File archivo = new File("notificaciones.txt");
     System.out.println("Intentando leer desde: " + archivo.getAbsolutePath());
     if (!archivo.exists() || archivo.length() == 0) {
         System.out.println("El archivo está vacío o no existe.");
@@ -408,10 +382,8 @@ public void imprimirNotificaciones() {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private componente.Fecha fecha1;
     private componente.HoraMinutos horaMinutos1;
-    private javax.swing.JButton jButtonBorrar;
     private javax.swing.JButton jButtonCrear;
     private javax.swing.JButton jButtonGetHora;
-    private javax.swing.JButton jButtonRevisar;
     private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;

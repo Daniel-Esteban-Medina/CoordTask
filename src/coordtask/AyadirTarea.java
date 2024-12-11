@@ -417,6 +417,10 @@ public class AyadirTarea extends javax.swing.JFrame {
         try {
         editarOcrear();
         crearRelaciones();
+        JOptionPane.showMessageDialog(null, 
+            "La tarea ha sido añadida exitosamente.", 
+            "Éxito", 
+            JOptionPane.INFORMATION_MESSAGE);
     } catch (Exception e) {
         JOptionPane.showMessageDialog(null, 
                     "No se pudo añadir o modificar el equipo. Intenta de nuevo.", 
